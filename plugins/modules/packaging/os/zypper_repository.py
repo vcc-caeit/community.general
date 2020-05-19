@@ -148,7 +148,15 @@ def _parse_repos(module):
             opts = {}
             for o in REPO_OPTS:
                 opts[o] = repo.getAttribute(o)
-            opts['url'] = repo.getElementsByTagName('url')[0].firstChild.data
+            try:
+                opts['url'] = repo.getElementsByTagName('url')[0].firstChild.data
+            except IndexError:  # url element missing, failback to `mirrorlist` attribute
+                # Even As `mirrorlist` seems to be an undocumented feature of zypper some
+                # (Bright computing for example) seems to use the feature. Thus even if we
+                # do not intend to support the `mirrorlist` attribute it's usage should
+                # not cause the module to fail. Setting the url to the mirrorlist value is
+                # a simple workaround. / VCC Martin Budsjö
+                opts['url'] = repo.getAttribute('mirrorlist')
             # A repo can be uniquely identified by an alias + url
             repos.append(opts)
         return repos
